@@ -1,0 +1,6 @@
+﻿"Id","ParentId","ParentIdStr","Name","RouterPath","RouterName","Desc","Icon","Hidden","Sort"
+"1","0",,"权限设置","/permission","PermissionGroup","设置系统菜单及接口与用户之间的联系","fa fa-gavel","0","99"
+"2","1","1","接口管理","/permission/authorizeApi","AuthorizeApi","后台需要授权使用的接口管理","fa fa-cloud","0","0"
+"3","1","1","菜单管理","/permission/menu","Menu","系统侧边栏级联菜单及前端vue-router动态路由","fa fa-list-ul","0","0"
+"4","1","1","角色管理","/permission/role","Role","角色的管理 及 接口、菜单与角色之间的绑定","fa fa-sitemap","0","0"
+"5","1","1","用户管理","/permission/user","User","系统用户的管理 及 角色的分配","fa fa-user","0","0"
