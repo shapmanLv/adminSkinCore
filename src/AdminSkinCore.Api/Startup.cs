@@ -30,6 +30,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace AdminSkinCore.Api
@@ -41,29 +42,7 @@ namespace AdminSkinCore.Api
             Configuration = configuration;
             Env = env;
 
-            #region serilog 配置
-            Log.Logger = new LoggerConfiguration()
-                       //配置日志最小输出的级别
-                       .MinimumLevel.Information()
-                       //配置Microsoft日志的最小记录等级
-                       .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                       .Enrich.FromLogContext()
-                       //输出到控制台
-                       .WriteTo.Console()
-                       //将日志保存到文件中（两个参数分别是日志的路径和生成日志文件的频次，当前是一天一个文件）
-                       .WriteTo.File(Path.Combine(
-                            configuration["Settings:LogFileSavePath"],
-                            @"log.txt"),
-                            rollingInterval: RollingInterval.Day)
-                       //将日志保存至es
-                       .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(configuration.GetConnectionString("Elasticsearch")))
-                       {
-                           AutoRegisterTemplate = true,
-                           IndexFormat = "adminSkinLog-{0:yyyy.MM.dd}" // 设置索引
-                       })
-                       .CreateLogger();
-            #endregion
-            Log.Logger.Information($"【app启动，环境为】：{Env.EnvironmentName}");
+            Log.Logger.Information("当前应用环境为：" + Env.EnvironmentName);
         }
 
         /// <summary>
@@ -108,10 +87,15 @@ namespace AdminSkinCore.Api
             });
             #endregion
        
-            #region EF Core
-
-            services.AddDbContext<AdminSkinDbContext>(options => options.UseMySql(Configuration.GetConnectionString("AdminSkinMysqlDb"), ServerVersion.AutoDetect(Configuration.GetConnectionString("AdminSkinMysqlDb"))));
-
+            #region EF Core            
+            services.AddDbContext<AdminSkinDbContext>(options =>
+                     options.UseMySql(Configuration.GetConnectionString("AdminSkinMysqlDb"),
+                     ServerVersion.AutoDetect(Configuration.GetConnectionString("AdminSkinMysqlDb")),
+                     mySqlOptionsAction: options =>
+                     {
+                         options.MigrationsAssembly(typeof(Startup).GetTypeInfo().Assembly.GetName().Name);
+                         options.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+                     }));
             #endregion
 
             #region redis cache
